@@ -69,6 +69,8 @@ Description of fields:
 }
 ```
 
+This message may have payment request decorator, see [payment section below](#payments-while-credential-exchange)
+
 #### Credential Proposal
 
 This message is sent by Prover in response to Credential Offer when Prover wants some fixes or changes in credential offered by Issuer. Schema:
@@ -117,6 +119,7 @@ Description of Fields:
 }
 ```
 
+This message may have payment confirmation decorator, see [payment section below](#payments-while-credential-exchange)
 
 #### Credential Issue
 This message contains the credential and sent in responce to Credential Request. Schema:
@@ -361,6 +364,44 @@ This message is sent by Verifier as he confirms that he had received the proof a
     "@id": "id"
 }
 ```
+
+## Payments while credential exchange
+
+There is a high probability that an instance of Indy network would like to use some implementation of utility token for balance in ecosystem. The value flow already presents while CX but it looks one way for simple case: issuer gives value to hodler (credential which can be used by holder for his needs) but doesn’t receive anything back. To resolve this case some utility token may be charged by Issuer from Holder per credential. In general different token flows are possible. Like a holder may provide proof to verifier for some data analysis or other Verifier’s need and in this case Verifier may pay some tokens to Holder.
+So both processes described in this HIPE (issuance and presentation) may be tied with tokens exchange.
+Also there is a good chance that token flow may be combined with other message flows, so it may be considered as decorator. This decorator is optional.
+
+#### Payment request
+
+```json
+{
+  ...msg...
+  "~payment-info" : {
+    "@type": ".../payment/request",
+    "price": ""
+  }
+}
+
+```
+
+#### Payment confirmation
+```json
+{
+  ...msg...
+  "~payment-info" : {
+    "@type": ".../payment/receipt",
+    "receipt(s)": ""
+  }
+}
+```
+
+#### Payment flow
+Payment request may be included to Credential Offer msg from Issuer to Holder. And receipt should be provided in this case in Credential Request by Issuer.
+While credential presentation the Verifier may transfer tokens as compensation for Holder for disclosing data. Payment receipt should be included into Presentation Request. Verifier may skip it in first request, but in this case Holder may request payment by sending back Presentation Proposal with appropriate decorator inside it.
+
+#### Limitations
+There is no smart contracts now in Indy ecosystem, so operation "issue credential after payment received" is not atomic. It’s possible case that malicious issuer will charge tokens first and then will not issue credential in fact. But this situation can be easily detected and appropriate penalty will be applied.
+
 
 ## Threading
 
